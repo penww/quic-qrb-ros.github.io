@@ -26,47 +26,98 @@ System Requirements
 Quickstart
 ----------
 
-Currently, we only support build with QCLINUX SDK.
+.. tabs::
+   .. tab:: Build with QIRP SDK
 
-1. Setup QCLINUX SDK: :doc:`Environment setup </getting_started/environment_setup>`
+      1. Setup QCLINUX SDK environments: Reference :doc:`Getting Started - Environment Setup </getting_started/environment_setup>`
 
-2. Create ``ros_ws`` directory in
-   ``<qirp_decompressed_workspace>/qirp-sdk/``
+      2. Create workspace in QCLINUX SDK environment and clone source code
 
-   .. code:: bash
+         .. code:: bash
 
-      mkdir -p <qirp_decompressed_workspace>/qirp-sdk/ros_ws
+            mkdir -p <qirp_decompressed_workspace>/qirp-sdk/ros_ws
+            cd <qirp_decompressed_workspace>/qirp-sdk/ros_ws
 
-3. Clone this repository and dependencies under
-   ``<qirp_decompressed_workspace>/qirp-sdk/ros_ws``
+            git clone https://github.com/quic-qrb-ros/qrb_ros_system_monitor.git
 
-   .. code:: bash
+      3. Build source code with QCLINUX SDK
 
-      git clone https://github.com/quic-qrb-ros/qrb_ros_system_monitor.git
+         .. code:: bash
 
-4. Build projects
+            export AMENT_PREFIX_PATH="${OECORE_TARGET_SYSROOT}/usr;${OECORE_NATIVE_SYSROOT}/usr"
+            export PYTHONPATH=${PYTHONPATH}:${OECORE_TARGET_SYSROOT}/usr/lib/python3.10/site-packages
 
-   .. code:: bash
+            colcon build --merge-install --cmake-args \
+            -DPython3_ROOT_DIR=${OECORE_TARGET_SYSROOT}/usr \
+            -DPython3_NumPy_INCLUDE_DIR=${OECORE_TARGET_SYSROOT}/usr/lib/python3.10/site-packages/numpy/core/include \
+            -DPYTHON_SOABI=cpython-310-aarch64-linux-gnu -DCMAKE_STAGING_PREFIX=$(pwd)/install \
+            -DCMAKE_PREFIX_PATH=$(pwd)/install/share \
+            -DBUILD_TESTING=OFF
 
-      export AMENT_PREFIX_PATH="${OECORE_TARGET_SYSROOT}/usr;${OECORE_NATIVE_SYSROOT}/usr"
-      export PYTHONPATH=${PYTHONPATH}:${OECORE_TARGET_SYSROOT}/usr/lib/python3.10/site-packages
-      
-      colcon build --merge-install --cmake-args \
-         -DPython3_ROOT_DIR=${OECORE_TARGET_SYSROOT}/usr \
-         -DPython3_NumPy_INCLUDE_DIR=${OECORE_TARGET_SYSROOT}/usr/lib/python3.10/site-packages/numpy/core/include \
-         -DPYTHON_SOABI=cpython-310-aarch64-linux-gnu -DCMAKE_STAGING_PREFIX=$(pwd)/install \
-         -DCMAKE_PREFIX_PATH=$(pwd)/install/share \
-         -DBUILD_TESTING=OFF
+      4. Install ROS package to device
 
-5. Run
+         .. code:: bash
 
-   .. code:: bash
+            cd <qirp_decompressed_workspace>/qirp-sdk/ros_ws/install
+            tar czvf qrb_ros_system_monitor.tar.gz lib share
+            scp qrb_ros_system_monitor.tar.gz root@[ip-addr]:/opt/
+            ssh ssh root@[ip-addr]
+            (ssh) tar -zxf /opt/qrb_ros_system_monitor.tar.gz -C /opt/qcom/qirp-sdk/usr/
 
-      cd <qirp_decompressed_workspace>/qirp-sdk/ros_ws/install
-      tar czvf qrb_ros_system_monitor.tar.gz lib share
-      scp qrb_ros_system_monitor.tar.gz root@[ip-addr]:/opt/
-      ssh ssh root@[ip-addr]
-      (ssh) tar -zxf /opt/qrb_ros_system_monitor.tar.gz -C /opt/qcom/qirp-sdk/usr/
+      5. Login to device and run
+
+         .. code:: bash
+
+            ssh root@[ip-addr]
+            (ssh) export HOME=/opt
+            (ssh) source /usr/bin/ros_setup.bash
+            (ssh) source /opt/qcom/qirp-sdk/qirp-setup.sh
+            (ssh) ros2 run qrb_ros_system_monitor qrb_ros_system_monitor
+
+   .. tab:: Build with QRB ROS Docker
+
+      1. Pull Docker image
+
+         .. code:: bash
+
+            docker pull qcom/qrb-ros-docker
+
+      2. Download source code
+
+         .. code:: bash
+
+            git clone https://github.com/quic-qrb-ros/qrb_ros_system_monitor.git
+
+      3. Build with Docker
+
+         .. code:: bash
+
+            colcon build
+
+   .. tab:: Build on QCOM Ubuntu
+
+      1. Create workspace and clone source code from GitHub
+
+         .. code:: bash
+
+            mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
+            git clone https://github.com/quic-qrb-ros/qrb_ros_system_monitor.git
+
+      2. Build source code
+
+         .. code:: bash
+
+            cd ~/ros2_ws
+            source /opt/ros/${ROS_DISTRO}/setup.bash
+            colcon build
+
+      3. Run system monitor
+
+         .. code:: bash
+
+            cd ~/ros2_ws
+            source install/setup.bash
+            ros2 run qrb_ros_system_monitor qrb_ros_system_monitor
 
 Packages
 --------
